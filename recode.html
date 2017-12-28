@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>报警记录</title>
+    <link rel="stylesheet" href="css/index.css">
+    <link href="layer/skin/layer.css" rel="stylesheet" />
+</head>
+
+<body>
+    <div>   
+        <div class="sys-details">
+           
+            <v-footer :active="1" :show-header="isShow"></v-footer>
+            <div class="sys-sheet">
+                <div class="sheet-searchWrapper">
+                    <label>
+                        省：
+                            <select>
+                                <option value="">全部</option>
+                                <option v-for="item in filterProvince" v-html="item.province"></option>
+                            </select>
+                        </label>
+                    <label>
+                        市：
+                            <select>
+                                <option value="">全部</option>
+                                <option v-for="item in filterCity" v-html="item.city"></option>
+                            </select>
+                        </label>
+                    <label>
+                        区：
+                            <select>
+                                <option value="">全部</option>
+                                <option v-for="item in filterDistrict" v-html="item.district"></option>
+                            </select>
+                        </label>
+                    <label>
+                        区域：
+                            <select>
+                                <option value="">全部</option>
+                                <option v-for="item in arrInfo" v-html="item.area"></option>
+                            </select>
+                        </label>
+                    <label>
+                        地址：
+                            <select>
+                                <option value="">全部</option>
+                                <option v-for="item in arrInfo" v-html="item.address"></option>
+                            </select>
+                        </label>
+                    <label>
+                        建筑：
+                            <select>
+                                <option value="">全部</option>
+                                <option v-for="item in arrInfo" v-html="item.area"></option>
+                            </select>
+                        </label>
+                    <label>
+                        安装位置：
+                            <select>
+                                <option value="">全部</option>
+                                <option v-for="item in arrInfo" v-html="item.alarmPosition"></option>
+                            </select>
+                        </label>
+                    <label>
+                            <button type="submit">搜索</button>
+                        </label>
+                </div>
+                <div class="sheet-table">
+                    <div class="sheet-table-container border">
+                        <div class="sheet-table-row">
+                            <p style="flex:0.5">编号</p>
+                            <p style="flex:1.5">区域</p>
+                            <p style="flex:1.5">地址</p>
+                            <p style="flex:1">电话</p>
+                            <p style="flex:1">联系人</p>
+                            <p style="flex:1">报警类型</p>
+                            <p style="flex:2">报警时间</p>
+                            <p style="flex:2">安装位置</p>
+                            <p style="flex:1">报警复核</p>
+                            <p style="flex:1">复核结果</p>
+                        </div>
+                        <div class="sheet-table-row" v-for="(item,index) in arrInfo">
+                            <p style="flex:0.5">{{index+1}}</p>
+                            <p style="flex:1.5">{{item.province+'，'+item.city+'，'+item.district}}</p>
+                            <p v-html="item.address" style="flex:1.5"></p>
+                            <p v-html="item.tel" style="flex:1"></p>
+                            <p v-html="item.connectPerson" style="flex:1"></p>
+                            <p v-html="item.alarmType" style="flex:1"></p>
+                            <p v-html="item.alarmTime" style="flex:2"></p>
+                            <p v-html="item.alarmPosition" style="flex:2"></p>
+                            <p v-html="item.alarmCheck" style="flex:1"></p>
+                            <p style="flex:1">
+                                <button class="sheet-checkResult" v-if="item.checkResult" @click="check(item)">复核</button>
+                                <span v-else>已复核</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="sheet-footer">
+                        <p>当前显示<span v-html='first'></span>到<span v-html="last"></span>条，共<span v-html="last"></span>条记录</p>
+                        <div class="M-box1 footer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/vue.js"></script>
+    <script src="js/jquery-3.1.0.js"></script>
+    <script src="layer/layer.js"></script>
+    <script src="./v-footer.js"></script>
+    <script>
+        new Vue({
+            el: '.sys-details',
+            data: {
+                isShow: true,
+                infoData: {
+                    house: [
+                        { province: '浙江省', city: '湖州市', district: '安吉县', area: '孝丰镇', address: '关路32号黄岳峰', tel: '13800000000', connectPerson: '张三', alarmType: '烟雾报警', alarmTime: '2017-12-23 10:43:10', alarmPosition: '安吉县孝丰镇城关路32号黄岳峰', alarmCheck: '某某单位，13812345678', checkResult: 1, Latitude: 120.059682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '宁波市', district: '鄞州区', area: '高新区', address: '翡翠湾', tel: '13800000001', connectPerson: '李四', alarmType: '设备故障报警', alarmTime: '2017-12-23 10:29:23', alarmPosition: '翡翠湾3号楼测试机', alarmCheck: '某某，13812345679', checkResult: 0, Latitude: 120.159682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '宁波市', district: '海曙区', area: '高桥镇', address: '藕缆桥西路11号凯盛公寓5楼', tel: '13800000002', connectPerson: '王五', alarmType: '烟雾报警', alarmTime: '2017-12-23 10:16:50', alarmPosition: '海曙区高桥镇藕缆桥西路11号凯盛公寓5楼', alarmCheck: '某某单位，13812345697', checkResult: 0, Latitude: 120.029682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '湖州市', district: '安吉县', area: '孝丰镇', address: '城关路32号黄岳峰', tel: '13800000000', connectPerson: '张三', alarmType: '烟雾报警', alarmTime: '2017-12-23 10:43:10', alarmPosition: '安吉县孝丰镇城关路32号黄岳峰', alarmCheck: '某某单位，13812345678', checkResult: 1, Latitude: 120.359682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '杭州市', district: '西湖区', area: '文一西路', address: '郡原公元里2号楼测试机', tel: '13800000001', connectPerson: '李四', alarmType: '设备故障报警', alarmTime: '2017-12-23 10:29:23', alarmPosition: '郡原公元里2号楼测试机', alarmCheck: '某某，13812345679', checkResult: 0, Latitude: 120.559682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '台州市', district: '玉环市', area: '玉城街道', address: '上岙村南园92号', tel: '13800000002', connectPerson: '王五', alarmType: '烟雾报警', alarmTime: '2017-12-23 10:16:50', alarmPosition: '玉环市玉城街道上岙村南园92号', alarmCheck: '某某单位，13812345697', checkResult: 1, Latitude: 120.459682, Longitude: 30.28793 },
+                    ]
+                },
+
+                first: 1,
+                last: 6,
+                arrInfo: [],
+                filterProvince: [],
+                filterCity: [],
+                filterDistrict: [],
+            },
+            methods: {
+                // 复核
+                check: function (item) {
+                    layer.confirm('确定要复核吗？', {
+                        btn: ['确定', '取消'] //按钮
+                    }, function () {
+                        layer.closeAll()
+                    });
+                }
+            },
+            created: function () {
+                this.arrInfo = this.infoData.house
+                var selectSta = this.arrInfo.map((item) => {
+                    return item.state
+                })
+                var hash = {};
+                this.filterProvince = this.arrInfo.reduce(function (item, next) {
+                    hash[next.province] ? '' : hash[next.province] = true && item.push(next);
+                    return item
+                }, [])
+                this.filterCity = this.arrInfo.reduce(function (item, next) {
+                    hash[next.city] ? '' : hash[next.city] = true && item.push(next);
+                    return item
+                }, [])
+                this.filterDistrict = this.arrInfo.reduce(function (item, next) {
+                    hash[next.district] ? '' : hash[next.district] = true && item.push(next);
+                    return item
+                }, [])
+            },
+        })
+    </script>
+</body>
+
+</html>

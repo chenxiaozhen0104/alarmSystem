@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>设备信息</title>
+    <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body>
+    <div class="sys-details">
+        <v-footer :active="2" :show-header="isShow"></v-footer>
+        <div class="sys-sheet">
+            <div class="sheet-searchWrapper">
+                <div class="sheet-searchBox border">
+                    <input type="text" placeholder="输入设备ID/名称" style="width:230px;" />
+                    <div class="sheet-imgBox">
+                        <img src="images/searchBlack.png" alt="">
+                    </div>
+                </div>
+            </div>
+            <div class="sheet-table">
+                <div class="sheet-table-container border">
+                    <div class="sheet-table-row">
+                        <p style="flex:1">编号</p>
+                        <p style="flex:1">区域</p>
+                        <p style="flex:2">地址</p>
+                        <p style="flex:2">安装位置</p>
+                        <p style="flex:1">电话</p>
+                        <p style="flex:1">联系人</p>
+                        <p style="flex:1">设备ID</p>
+                        <p style="flex:1">设备名称</p>
+                        <p style="flex:1">连接状态</p>
+                        <p style="flex:1">报警状态</p>
+                    </div>
+                    <div class="sheet-table-row" v-for="(item,i) in sysData">
+                        <p style="flex:1">{{i+1}}</p>
+                        <p style="flex:1">{{item.area}}</p>
+                        <p style="flex:2">{{item.address}}</p>
+                        <p style="flex:2">{{item.location}}</p>
+                        <p style="flex:1">{{item.phone}}</p>
+                        <p style="flex:1">{{item.contact}}</p>
+                        <p style="flex:1">{{item.sysId}}</p>
+                        <p style="flex:1">{{item.sysName}}</p>
+                        <p style="flex:1" :style="{color:item.sysStatue?'green':'red'}">{{item.sysStatue?'正常':'异常'}}</p>
+                        <p style="flex:1" :style="{color:item.alarmStatus?'green':'red'}">{{item.alarmStatus?'正常':'异常'}}</p>
+                    </div>
+                </div>
+                <div class="sheet-footer">
+                    <p>当前显示<span v-html='1'></span>到<span v-html="sysData.length"></span>条，共<span v-html="sysData.length"></span>条记录</p>
+                    <div class="M-box1 footer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="js/vue.js"></script>
+    <script src="./v-footer.js"></script>
+    <script>
+        new Vue({
+            el: '.sys-details',
+            //component:[vFooter:'v-footer']
+            data: {
+                isShow:true,
+                sysData: [
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街01号', location: '一层', phone: '13812345678', contact: '王先生', sysId: 'F0645810', sysName: '创新大厦A座', sysStatue: 1, alarmStatus: 1 },
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街02号', location: '二层', phone: '13545615678', contact: '陈先生', sysId: 'F0645810', sysName: '创新大厦B座', sysStatue: 1, alarmStatus: 1 },
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街03号', location: '一层', phone: '13712345678', contact: '刘先生', sysId: 'F0645810', sysName: '创新大厦C座', sysStatue: 1, alarmStatus: 0 },
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街04号', location: '三层', phone: '13212345678', contact: '周先生', sysId: 'F0645810', sysName: '创新大厦D座', sysStatue: 1, alarmStatus: 0 },
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街05号', location: '一层', phone: '13112345678', contact: '张先生', sysId: 'F0645810', sysName: '创新大厦A座', sysStatue: 1, alarmStatus: 1 },
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街06号', location: '四层', phone: '15812345678', contact: '陆先生', sysId: 'F0645810', sysName: '创新大厦A座', sysStatue: 1, alarmStatus: 1 },
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街07号', location: '一层', phone: '13014545678', contact: 'xx先生', sysId: 'F0645810', sysName: '创新大厦A座', sysStatue: 1, alarmStatus: 1 }
+                ]
+            },
+        })
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>浙灵智慧消防报警管理系统</title>
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/pagination.css">
+    <link href="layer/skin/layer.css" rel="stylesheet" />
+    <link rel="stylesheet" href="http://cache.amap.com/lbs/static/main1119.css" />
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sys-container">
+        <!--头部-->
+        <div class="sys-header-box" v-if="showHeader">
+            <div class="sys-header">
+                <div class="sys-title">
+                    <img src="images/logo.png" alt="" />
+                    <p>
+                        <span class="sys-name">浙灵智慧消防报警管理系统</span>
+                        <span>ZheLing Intelligent fire alarm management system</span>
+                    </p>
+                </div>
+                <div class="sys-set">
+                    <div class="sys-info">
+                        <img src="images/headPhoto.png" alt="" />
+                        <p>
+                            <span>系统管理员</span>
+                            <span class="sys-changePwd" @click="showToastMask">修改密码</span>
+                        </p>
+                    </div>
+                    <div class="sys-quit">
+                        <img :src="url" />
+                    </div>
+                </div>
+            </div>
+            <!--tab切换-->
+            <ul class="sys-tab">
+                <a class="sys-tab-li" href="map.html" target="content">报警地图<span></span></a>
+                <a class="sys-tab-li" href="recode.html" target="content">报警记录<span></span></a>
+                <a class="sys-tab-li" href="deviceInfo.html" target="content" >设备信息<span></span></a>
+                <a class="sys-tab-li" href="javascript:void(0);">系统管理<span></span></a>
+            </ul>
+        </div>
+        <div class="sys-box">
+            <iframe :src="pageUrl" frameborder="0" name="content"></iframe>
+        </div>
+        <!--修改密码-->
+        <div class="sys-changeBox" v-cloak v-if="showTosat" @click.stop>
+            <div class="sys-changeContent ">
+                <div class="sys-changeTitle ">
+                    <h4>修改密码</h4>
+                    <span class="delete" @click="hideTosat">X</span>
+                </div>
+                <div class="sys-changeForm">
+                    <p class="passwordList">
+                        <span>旧密码：</span><input type="password" placeholder="请输入旧密码" v-model="oldPwd" /></p>
+                    <p class="passwordList">
+                        <span>新密码：</span><input type="password" placeholder="请输入新密码" v-model="newPwd" /></p>
+                    <p class="passwordList">
+                        <span>确认密码：</span><input type="password" placeholder="请再次输入新密码" v-model="reNewPwd" /></p>
+                </div>
+                <div class="sys-changeFooter">
+                    <span @click="hideTosat" style="cursor:pointer;">取消</span>
+                    <button type="button" class="sys-sure" @click="sure">确定</button>
+                </div>
+            </div>
+        </div>
+        <!--设备报警记录右下角-->
+        <div class="sys-recode" :style="showSmall?oldStyle[0]:oldStyle[1]" v-if="showRecode">
+            <div class="recode-title">
+                <span><img src="images/AlarmRed.gif" alt="">设备报警记录</span>
+                <div class="recode-imgBox">
+                    <p @click="bigger"><img :src="imgUrl" /></p>
+                    <p @click="close(1)"><img src="images/close.png" /></p>
+                </div>
+            </div>
+            <div class="recode-content">
+                <a href="javascript:void(0);" v-for="(item,index) in infoData.house" @click="choose(item)">报警信息：<span style="color:#0785fd">{{item.time}}</span>位于<span style="color:#0785fd">{{item.alarmPosition}}</span>发生<span style="color:red">{{item.alarmType}}</span></a>
+            </div>
+        </div>
+    </div>
+    <script src="js/jquery-3.1.0.js"></script>
+    <script src="js/vue.js"></script>
+    <script src="layer/layer.js"></script>
+    <script>
+        var system = new Vue({
+            el: '.sys-container',
+            data: {
+                pageUrl: 'map.html',
+                leftIcon: [
+                    { url: 'images/house.png', num: '200', name: '建筑', type: 'leftIcon', selected: true },
+                    { url: 'images/alarm.png', num: '300', name: '报警器', type: 'leftIcon', selected: false }
+                ],
+                rightIcon: [
+                    // { url: 'images/tem.png', name: '温度报警', type: 'rightIcon', selected: false },
+                    { url: 'images/smoke.png', name: '烟雾报警', type: 'rightIcon', selected: false }
+                ],
+                keyWord: '',
+                infoData: {
+                    house: [
+                        { province: '浙江省', city: '湖州市', district: '安吉县', area: '孝丰镇', address: '关路32号黄岳峰', tel: '13800000000', connectPerson: '张三', alarmType: '烟雾报警', alarmTime: '2017-12-23 10:43:10', alarmPosition: '安吉县孝丰镇城关路32号黄岳峰', alarmCheck: '某某单位，13812345678', checkResult: 1, Latitude: 120.059682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '宁波市', district: '鄞州区', area: '高新区', address: '翡翠湾', tel: '13800000001', connectPerson: '李四', alarmType: '设备故障报警', alarmTime: '2017-12-23 10:29:23', alarmPosition: '翡翠湾3号楼测试机', alarmCheck: '某某，13812345679', checkResult: 0, Latitude: 120.159682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '宁波市', district: '海曙区', area: '高桥镇', address: '藕缆桥西路11号凯盛公寓5楼', tel: '13800000002', connectPerson: '王五', alarmType: '烟雾报警', alarmTime: '2017-12-23 10:16:50', alarmPosition: '海曙区高桥镇藕缆桥西路11号凯盛公寓5楼', alarmCheck: '某某单位，13812345697', checkResult: 0, Latitude: 120.029682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '湖州市', district: '安吉县', area: '孝丰镇', address: '城关路32号黄岳峰', tel: '13800000000', connectPerson: '张三', alarmType: '烟雾报警', alarmTime: '2017-12-23 10:43:10', alarmPosition: '安吉县孝丰镇城关路32号黄岳峰', alarmCheck: '某某单位，13812345678', checkResult: 1, Latitude: 120.359682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '杭州市', district: '西湖区', area: '文一西路', address: '郡原公元里2号楼测试机', tel: '13800000001', connectPerson: '李四', alarmType: '设备故障报警', alarmTime: '2017-12-23 10:29:23', alarmPosition: '郡原公元里2号楼测试机', alarmCheck: '某某，13812345679', checkResult: 0, Latitude: 120.559682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '台州市', district: '玉环市', area: '玉城街道', address: '上岙村南园92号', tel: '13800000002', connectPerson: '王五', alarmType: '烟雾报警', alarmTime: '2017-12-23 10:16:50', alarmPosition: '玉环市玉城街道上岙村南园92号', alarmCheck: '某某单位，13812345697', checkResult: 1, Latitude: 120.459682, Longitude: 30.28793 },
+                    ]
+                },
+                sysData: [
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街01号', location: '一层', phone: '13812345678', contact: '王先生', sysId: 'F0645810', sysName: '创新大厦A座', sysStatue: 1, alarmStatus: 1 },
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街02号', location: '二层', phone: '13545615678', contact: '陈先生', sysId: 'F0645810', sysName: '创新大厦B座', sysStatue: 1, alarmStatus: 1 },
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街03号', location: '一层', phone: '13712345678', contact: '刘先生', sysId: 'F0645810', sysName: '创新大厦C座', sysStatue: 1, alarmStatus: 0 },
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街04号', location: '三层', phone: '13212345678', contact: '周先生', sysId: 'F0645810', sysName: '创新大厦D座', sysStatue: 1, alarmStatus: 0 },
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街05号', location: '一层', phone: '13112345678', contact: '张先生', sysId: 'F0645810', sysName: '创新大厦A座', sysStatue: 1, alarmStatus: 1 },
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街06号', location: '四层', phone: '15812345678', contact: '陆先生', sysId: 'F0645810', sysName: '创新大厦A座', sysStatue: 1, alarmStatus: 1 },
+                    { area: '浙江省,杭州市', address: '西湖区黄龙街07号', location: '一层', phone: '13014545678', contact: 'xx先生', sysId: 'F0645810', sysName: '创新大厦A座', sysStatue: 1, alarmStatus: 1 }
+                ],
+                showTosat: false,
+                oldPwd: '',
+                newPwd: '',
+                reNewPwd: '',
+                url: 'images/quit.png',
+                name: '建筑',
+                arrData: [],
+                selectState: [],
+                titleArr: { num: '编号', dev: 'DevEUI', model: '型号', type: '通信类型', deviceType: '设备类型', area: '区域', name: '建筑', position: '位置', state: '状态' },
+                first: 1,
+                last: 6,
+                showDetails: false,
+                arrInfo: [],
+                center: [120.397428, 39.90923],
+                titleName: '',
+                showRecode: true,
+                showSmall: true,
+                width: '500px',
+                height: '260px',
+                imgUrl: 'images/bigger.png',
+                oldStyle: [
+                    {
+                        width: '500px',
+                        height: '260px'
+                    },
+                    {
+                        width: '100%',
+                        height: document.documentElement.clientHeight + 'px'
+                    }
+                ],
+                showForm: true,
+                showHeader: true,
+                showBig: true,
+                filterProvince: [],
+                filterCity: [],
+                filterDistrict: [],
+            },
+            methods: {
+                pageTo: function (str) {
+                    if (str == 'map') {
+                        this.pageUrl = 'map.html'
+                    }
+                    if (str == 'recode') {
+                        this.pageUrl = 'recode.html'
+                    }
+                    if (str == 'deviceInfo') {
+                        this.pageUrl = 'deviceInfo.html'
+                    }
+                },
+                judgeType: function (type) {
+                    if (type == 1) {
+                        return '离线'
+                    }
+                    if (type == 2) {
+                        return '在线'
+                    }
+                    if (type == 3) {
+                        return '报警'
+                    }
+                },
+                bigger: function (type) {
+                    if (type == 0) { }
+                    this.showSmall = !this.showSmall;
+                    if (this.showSmall) {
+                        this.imgUrl = 'images/bigger.png'
+                    } else {
+                        this.imgUrl = 'images/smaller.png'
+                    }
+                },
+                mapBigger: function () {
+                    console.log(123)
+                    this.showBig = !this.showBig;
+                    if (this.showBig) {
+                        this.imgUrl = 'images/bigger.png'
+                        this.showHeader = true
+                    } else {
+                        this.imgUrl = 'images/smaller.png'
+                        this.showHeader = false
+                    }
+                },
+                close: function (num) {
+                    if (num == 0) {
+                        console.log(num, 'pppppppppppppp')
+                        this.showForm = false
+                    } else {
+                        this.showRecode = false
+                    }
+                },
+                showToastMask: function () {
+                    this.showTosat = true
+                },
+                hideDetails: function () {
+                    this.showDetails = false
+                }
+            }
+
+        })
+        // 退出样式
+        $('.sys-quit').mouseover(function () {
+            $(this).children().attr("src", 'images/afterQuit.png');
+        })
+        $('.sys-quit').mouseleave(function () {
+            $(this).children().attr("src", 'images/quit.png');
+        })
+        $('.sys-tab-li').eq(0).children().addClass('borderLine')
+        $('.sys-tab-li').click(function () {
+            $(this).children().addClass('borderLine').parents().siblings().children().removeClass('borderLine')
+        })
+    </script>
+</body>
+
+</html>

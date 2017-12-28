@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>报警地图</title>
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/pagination.css">
+    <link href="layer/skin/layer.css" rel="stylesheet" />
+    <link rel="stylesheet" href="http://cache.amap.com/lbs/static/main1119.css" />
+    <script type="text/javascript" src="http://webapi.amap.com/maps?v=1.4.2&key=e39f518d64460f45dade884d2d9c98c1"></script>
+    <script type="text/javascript" src="http://cache.amap.com/lbs/static/addToolbar.js"></script>
+    <script src="https://webapi.amap.com/ui/1.0/main.js?v=1.0.11"></script>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sys-details">
+        <div class="map-headers"></div>
+        <v-footer :active="0" :show-header="isShow"></v-footer>
+        <!--地图-->
+        <div id="map"></div>
+        <!--<ul class="sys-icon">-->
+        <li class="left-icon">
+            <div class="left-icon-wrapper icon-wrapper" :class="{selected:item.selected}" v-for="item in leftIcon" v-on:click="select(item)">
+                <img :src="item.url" />
+                <p class="sys-word">
+                    <span v-html="item.num" class="sys-word-num"></span>
+                    <span v-html="item.name" class="sys-word-name"></span>
+                </p>
+            </div>
+        </li>
+        <li class="right-icon">
+            <div class="right-icon-wrapper icon-wrapper" v-for="item in rightIcon" v-on:click="showAlarmDetails">
+                <div class="right-icon-background">
+                    <img :src="item.url" />
+                </div>
+                <span v-html="item.name"></span>
+            </div>
+        </li>
+        <!--</ul>-->
+        <!--左面列表-->
+        <div class="sys-form" v-if="showForm">
+            <div class="sys-form-title">
+                <h3 v-html="name"></h3>
+                <div class="close form-title" @click="close('0')"><span>+</span></div>
+            </div>
+            <div class="sys-input">
+                <input type="text" class="sys-setInput" placeholder="关键词" v-model="keyWord" />
+                <div class="sys-imgBox">
+                    <img src="images/search.png" class="imgBox-search" />
+                </div>
+            </div>
+            <div class="sys-table">
+                <div class="sys-row" v-for="item in arrData" :class="{choosed:item.choosed}" @click="choose(item)">
+                    <p>{{item.name}}
+                        <span v-if="item.state" :style="{color:[item.type==1?'#f00':'#333']}">&nbsp;(&nbsp;{{judgeType(item.type)}}&nbsp;)</span>
+                    </p>
+                    <span v-html="item.position"></span>
+                </div>
+            </div>
+            <div class="M-box1"></div>
+        </div>
+        <!--点击maker显示的列表-->
+        <div class="sys-formDetails map-sys-formDetails" ref="win" v-cloak v-show="showDetails">
+            <div class="sys-sheet map-sheet">
+                <div class="close" @click="hideDetails"><span>+</span></div>
+                <div class="sheet-header map-header">
+                    <p class="sheet-headerTitle" v-html="titleName"></p>
+                </div>
+                <div class="sheet-searchWrapper map-sheet-searchWrapper">
+                    <label>
+                        省：
+                            <select>
+                                <option value="">全部</option>
+                                <option v-for="item in filterProvince" v-html="item.province"></option>
+                            </select>
+                        </label>
+                    <label>
+                        市：
+                            <select>
+                                <option value="">全部</option>
+                                <option v-for="item in filterCity" v-html="item.city"></option>
+                            </select>
+                        </label>
+                    <label>
+                        区：
+                            <select>
+                                <option value="">全部</option>
+                                <option v-for="item in filterDistrict" v-html="item.district"></option>
+                            </select>
+                        </label>
+                    <label>
+                        区域：
+                            <select>
+                                <option value="">全部</option>
+                                <option v-for="item in arrInfo" v-html="item.area"></option>
+                            </select>
+                        </label>
+                    <label>
+                        地址：
+                            <select>
+                                <option value="">全部</option>
+                                <option v-for="item in arrInfo" v-html="item.address"></option>
+                            </select>
+                        </label>
+                    <label>
+                            <label>建筑：
+                                <select>
+                                    <option value="">全部</option>
+                                    <option v-for="item in arrInfo" v-html="item.area"></option>
+                                </select>
+                            </label>
+                    <label>安装位置：
+                                <select>
+                                    <option value="">全部</option>
+                                    <option v-for="item in arrInfo" v-html="item.alarmPosition"></option>
+                                </select>
+                            </label>
+                    <label>
+                                <button type="submit">搜索</button>
+                            </label>
+                </div>
+                <div class="sheet-table map-sheet-table">
+                    <div class="sheet-table-container map-sheet-table-container border">
+                        <div class="sheet-table-row map-table-row">
+                            <p style="flex:0.5">编号</p>
+                            <p style="flex:1">区域</p>
+                            <p style="flex:1">地址</p>
+                            <p style="flex:1.5">电话</p>
+                            <p style="flex:1">联系人</p>
+                            <p style="flex:1">报警类型</p>
+                            <p style="flex:2">报警时间</p>
+                            <p style="flex:2">安装位置</p>
+                            <p style="flex:1">报警复核</p>
+                            <p style="flex:1">复核结果</p>
+                        </div>
+                        <div class="sheet-table-row map-table-row" v-for="(item,index) in arrInfo">
+                            <p style="flex:0.5">{{index+1}}</p>
+                            <p v-html="item.area" style="flex:1"></p>
+                            <p v-html="item.address" style="flex:1"></p>
+                            <p v-html="item.tel" style="flex:1.5"></p>
+                            <p v-html="item.connectPerson" style="flex:1"></p>
+                            <p v-html="item.alarmType" style="flex:1"></p>
+                            <p v-html="item.alarmTime" style="flex:2"></p>
+                            <p v-html="item.alarmPosition" style="flex:2"></p>
+                            <p v-html="item.alarmCheck" style="flex:1"></p>
+                            <p v-html="item.checkResult" style="flex:1"></p>
+                        </div>
+                    </div>
+                    <div class="sheet-footer">
+                        <p>当前显示<span v-html='first'></span>到<span v-html="last"></span>条，共<span v-html="last"></span>条记录</p>
+                        <div class="M-box1 footer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--地图放大缩小页面-->
+        <div class="sys-map" @click="mapBigger">
+            <img :src="imgUrl" />
+        </div>
+    </div>
+    <script src="js/jquery-3.1.0.js"></script>
+    <script src="js/jquery.pagination.min.js"></script>
+    <script src="js/vue.js"></script>
+    <script src="js/drag.js"></script>
+    <script src="layer/layer.js"></script>
+    <script src="./v-footer.js"></script>
+    <script>
+        var system = new Vue({
+            el: '.sys-details',
+            data: {
+                isShow: true,
+                leftIcon: [
+                    { url: 'images/house.png', num: '200', name: '建筑', type: 'leftIcon', selected: true },
+                    { url: 'images/alarm.png', num: '300', name: '报警器', type: 'leftIcon', selected: false }
+                ],
+                rightIcon: [
+                    { url: 'images/smoke.png', name: '烟雾报警', type: 'rightIcon', selected: false }
+                ],
+                formData: {
+                    name: '建筑',
+                    areas: [
+                        { name: '建筑1', position: '浙江省杭州市西湖区黄龙街01号', choosed: false, Latitude: 120.059682, Longitude: 30.08793, type: 1, num: 6 },
+                        { name: '建筑2', position: '浙江省杭州市西湖区黄龙街02号', choosed: false, Latitude: 119.869682, Longitude: 30.18793, type: 3, num: 6 },
+                        { name: '建筑3', position: '浙江省杭州市西湖区黄龙街03号', choosed: false, Latitude: 120.279682, Longitude: 30.68793, type: 2, num: 6 },
+                        { name: '建筑4', position: '浙江省杭州市西湖区黄龙街04号', choosed: false, Latitude: 120.389682, Longitude: 30.38793, type: 1, num: 6 },
+                        { name: '建筑5', position: '浙江省杭州市西湖区黄龙街05号', choosed: false, Latitude: 120.459682, Longitude: 30.48793, type: 1, num: 6 },
+                        { name: '建筑6', position: '浙江省杭州市西湖区黄龙街06号', choosed: false, Latitude: 120.568682, Longitude: 30.38793, type: 3, num: 6 },
+                        { name: '建筑7', position: '浙江省杭州市西湖区黄龙街07号', choosed: false, Latitude: 120.678682, Longitude: 30.26793, type: 2, num: 6 },
+                        { name: '建筑8', position: '浙江省杭州市西湖区黄龙街08号', choosed: false, Latitude: 120.788682, Longitude: 30.27793, type: 2, num: 6 },
+                        { name: '建筑9', position: '浙江省杭州市西湖区黄龙街09号', choosed: false, Latitude: 119.858682, Longitude: 30.29793, type: 2, num: 6 },
+                        { name: '建筑10', position: '浙江省杭州市西湖区黄龙街10号', choosed: false, Latitude: 119.957682, Longitude: 30.83793, type: 2, num: 6 }
+                    ],
+                    alarm: [
+                        { name: '警报器1', state: '1', position: '安吉县孝丰镇城关路32号黄岳峰', choosed: false, Latitude: 120.059682, Longitude: 30.28793, type: 3, num: 6 },
+                        { name: '警报器2', state: '0', position: '翡翠湾3号楼测试机', choosed: false, Latitude: 120.159682, Longitude: 30.28793, type: 2, num: 6 },
+                        { name: '警报器3', state: '0', position: '海曙区高桥镇藕缆桥西路11号凯盛公寓5楼', choosed: false, Latitude: 120.029682, Longitude: 30.28793, type: 2, num: 6 },
+                        { name: '警报器4', state: '0', position: '安吉县孝丰镇城关路32号黄岳峰', choosed: false, Latitude: 120.359682, Longitude: 30.28793, type: 1, num: 6 },
+                        { name: '警报器5', state: '1', position: '翡翠湾3号楼测试机', choosed: false, Latitude: 120.559682, Longitude: 30.28793, type: 2, num: 6 },
+                        { name: '警报器6', state: '1', position: '海曙区高桥镇藕缆桥西路11号凯盛公寓5楼', choosed: false, Latitude: 120.459682, Longitude: 30.28793, type: 3, num: 6 },
+                        { name: '警报器7', state: '1', position: '浙江省杭州市西湖区黄龙街07号', choosed: false, Latitude: 120.259682, Longitude: 30.28793, type: 2, num: 6 },
+                        { name: '警报器8', state: '1', position: '浙江省杭州市西湖区黄龙街08号', choosed: false, Latitude: 119.859682, Longitude: 30.28793, type: 1, num: 6 },
+                        { name: '警报器9', state: '1', position: '浙江省杭州市西湖区黄龙街09号', choosed: false, Latitude: 120.057682, Longitude: 30.38793, type: 2, num: 6 },
+                        { name: '警报器10', state: '1', position: '浙江省杭州市西湖区黄龙街10号', choosed: false, Latitude: 119.959682, Longitude: 30.35793, type: 2, num: 6 }
+                    ]
+                },
+                keyWord: '',
+                infoData: {
+                    house: [
+                        { province: '浙江省', city: '湖州市', district: '安吉县', area: '孝丰镇', address: '关路32号黄岳峰', tel: '13800000000', connectPerson: '张三', alarmType: '烟雾报警', alarmTime: '2017-12-23 10:43:10', alarmPosition: '安吉县孝丰镇城关路32号黄岳峰', alarmCheck: '某某单位，13812345678', checkResult: 1, Latitude: 120.059682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '宁波市', district: '鄞州区', area: '高新区', address: '翡翠湾', tel: '13800000001', connectPerson: '李四', alarmType: '设备故障报警', alarmTime: '2017-12-23 10:29:23', alarmPosition: '翡翠湾3号楼测试机', alarmCheck: '某某，13812345679', checkResult: 0, Latitude: 120.159682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '宁波市', district: '海曙区', area: '高桥镇', address: '藕缆桥西路11号凯盛公寓5楼', tel: '13800000002', connectPerson: '王五', alarmType: '烟雾报警', alarmTime: '2017-12-23 10:16:50', alarmPosition: '海曙区高桥镇藕缆桥西路11号凯盛公寓5楼', alarmCheck: '某某单位，13812345697', checkResult: 0, Latitude: 120.029682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '湖州市', district: '安吉县', area: '孝丰镇', address: '城关路32号黄岳峰', tel: '13800000000', connectPerson: '张三', alarmType: '烟雾报警', alarmTime: '2017-12-23 10:43:10', alarmPosition: '安吉县孝丰镇城关路32号黄岳峰', alarmCheck: '某某单位，13812345678', checkResult: 1, Latitude: 120.359682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '杭州市', district: '西湖区', area: '文一西路', address: '郡原公元里2号楼测试机', tel: '13800000001', connectPerson: '李四', alarmType: '设备故障报警', alarmTime: '2017-12-23 10:29:23', alarmPosition: '郡原公元里2号楼测试机', alarmCheck: '某某，13812345679', checkResult: 0, Latitude: 120.559682, Longitude: 30.28793 },
+                        { province: '浙江省', city: '台州市', district: '玉环市', area: '玉城街道', address: '上岙村南园92号', tel: '13800000002', connectPerson: '王五', alarmType: '烟雾报警', alarmTime: '2017-12-23 10:16:50', alarmPosition: '玉环市玉城街道上岙村南园92号', alarmCheck: '某某单位，13812345697', checkResult: 1, Latitude: 120.459682, Longitude: 30.28793 },
+                    ]
+                },
+                showTosat: false,
+                oldPwd: '',
+                newPwd: '',
+                reNewPwd: '',
+                url: 'images/quit.png',
+                name: '建筑',
+                arrData: [],
+                titleArr: { num: '编号', dev: 'DevEUI', model: '型号', type: '通信类型', deviceType: '设备类型', area: '区域', name: '建筑', position: '位置', state: '状态' },
+                first: 1,
+                last: 6,
+                showDetails: false,
+                arrInfo: [],
+                center: [120.397428, 39.90923],
+                titleName: '',
+                showRecode: true,
+                showSmall: true,
+                width: '500px',
+                height: '260px',
+                imgUrl: 'images/bigger.png',
+                oldStyle: [
+                    {
+                        width: '500px',
+                        height: '260px'
+                    },
+                    {
+                        width: '100%',
+                        height: document.documentElement.clientHeight + 'px'
+                    }
+                ],
+                showForm: true,
+                showHeader: true,
+                showBig: true,
+                filterProvince: [],
+                filterCity: [],
+                filterDistrict: [],
+            },
+            methods: {
+                judgeType: function (type) {
+                    if (type == 1) {
+                        return '离线'
+                    }
+                    if (type == 2) {
+                        return '在线'
+                    }
+                    if (type == 3) {
+                        return '报警'
+                    }
+                },
+                bigger: function (type) {
+                    if (type == 0) { }
+                    this.showSmall = !this.showSmall;
+                    if (this.showSmall) {
+                        this.imgUrl = 'images/bigger.png'
+                    } else {
+                        this.imgUrl = 'images/smaller.png'
+                    }
+                },
+                mapBigger: function () {
+                    console.log(123)
+                    this.isShow = !this.isShow;
+                    this.showBig = !this.showBig;
+                    if (this.showBig) {
+                        this.imgUrl = 'images/bigger.png'
+                        this.showHeader = true
+                    } else {
+                        this.imgUrl = 'images/smaller.png'
+                        this.showHeader = false
+                    }
+                },
+                close: function (num) {
+                    if (num == 0) {
+                        console.log(num, 'pppppppppppppp')
+                        this.showForm = false
+                    } else {
+                        this.showRecode = false
+                    }
+                },
+                showToastMask: function () {
+                    this.showTosat = true
+                },
+                hideDetails: function () {
+                    this.showDetails = false
+                },
+                hideTosat: function () {
+                    this.showTosat = false
+                },
+                select: function (item) {
+                    this.name = item.name
+                    this.showForm = true
+                    if (item.name == '建筑') {
+                        this.arrData = this.formData.areas
+                    }
+                    if (item.name == '报警器') {
+                        this.arrData = this.formData.alarm
+                    }
+                    if (item.type == 'leftIcon') {
+                        this.leftIcon.map((i) => { i.selected = false })
+                        this.rightIcon.map((i) => { i.selected = false })
+                        item.selected = true
+                    }
+                    init()
+                },
+                showAlarmDetails: function () {
+                    this.showRecode = true
+                },
+                choose: function (item) {
+                    this.formData.areas.map((it) => {
+                        it.choosed = false
+                    })
+                    this.formData.alarm.map((it) => {
+                        it.choosed = false
+                    })
+                    item.choosed = true
+                    this.center = [item.Latitude, item.Longitude]
+                    moveTo(this.center, item)
+                },
+                sure: function () {
+                    // 调接口
+                    this.showTosat = false
+                }
+            },
+            created: function () {
+                this.arrInfo = this.infoData.house
+                this.arrData = this.formData.areas
+                var selectSta = this.arrInfo.map((item) => {
+                    return item.state
+                })
+                this.selectState = Array.from(new Set(selectSta))
+            },
+            mounted: function () {
+                drag(this.$refs.win)
+            }
+
+        })
+
+        // 分页
+        $(function () {
+            $('.M-box1').pagination({
+                totalData: system.arrData.length,
+                showData: 10,
+                coping: true
+            });
+        });
+
+        // 设置地图的点位
+        var map = new AMap.Map("map", {
+            resizeEnable: true,
+            zoom: 11,
+            center: system.center
+        });
+        var makers = []
+        // 移动地图到相应点位
+        function moveTo(position, it) {
+
+            map.panTo(position)
+            makers.forEach(function (item) {
+                if (item.getPosition().lng === position[0] && item.getPosition().lat === position[1]) {
+                    if (it.type == 1) {
+                        item.setIcon('	http://img.zmnbx.com//dist/Images/afterRed-.png')
+                    }
+                    if (it.type == 2) {
+                        item.setIcon('http://img.zmnbx.com//dist/Images/afterBlue.png')
+                    }
+                    if (it.type == 3) {
+                        item.setIcon('http://img.zmnbx.com//dist/Images/afterAlarm1.gif')
+                    }
+                } else {
+                    item.setIcon(item.oldIcon)
+                }
+            })
+        }
+        function init() {
+            map.clearMap()
+            var iconUrl = '';
+            makers = []
+            AMapUI.loadUI(['overlay/SimpleInfoWindow'], function (SimpleInfoWindow) {
+                var infoWindow = new SimpleInfoWindow({
+                    //模板, underscore
+                    infoTitle: '<strong><%- title %></strong>',
+                    infoBody: '<p class="my-desc">' + '<%= img %>' + '<%- body %>' + '</p>',
+                    //基点指向marker的头部位置
+                    offset: new AMap.Pixel(0, -31)
+                });
+                for (var i = 0; i < system.arrData.length; i++) {
+                    var item = system.arrData[i]
+                    if (item.type == 1) {
+                        iconUrl = 'http://img.zmnbx.com//dist/Images/home-red.png'
+                    }
+                    if (item.type == 2) {
+                        iconUrl = 'http://img.zmnbx.com//dist/Images/home-blue.png'
+                    }
+                    if (item.type == 3) {
+                        iconUrl = 'http://img.zmnbx.com//dist/Images/AlarmRed.gif'
+                    }
+                    var maker = new AMap.Marker({
+                        map: map,
+                        icon: iconUrl,
+                        position: [item.Latitude, item.Longitude],
+                        clickable: true,
+                        cursor: 'pointer'
+                    })
+                    maker.oldIcon = iconUrl
+                    maker.tpl = {
+                        title: item.name,
+                        img: '',
+                        body: `安装报警器${item.num}个`
+                    }
+                    maker.setMap(map);
+                    function openInfoWin(m) {
+                        infoWindow.setInfoTplData(m.tpl)
+                        infoWindow.open(map, m.getPosition());
+                    }
+
+                    //marker 点击时打开
+                    AMap.event.addListener(maker, 'click', function () {
+                        openInfoWin(this);
+                    });
+                    // openInfoWin();
+                    infoWindow.get$Container().on('click', function (event) {
+                        system.showDetails = true
+                        system.titleName = item.name
+                        infoWindow.close()
+                    });
+                    makers.push(maker)
+                }
+                map.setFitView();
+            })
+        }
+        init()
+    </script>
+</body>
+
+</html>
